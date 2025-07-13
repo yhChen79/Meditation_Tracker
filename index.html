@@ -225,18 +225,20 @@
         }
         
         // --- 修改點 2 & 3：簡化 toggleDay，讓資料更新更集中 ---
-        async function toggleDay(dateStr) {
-            if (!userData[currentUser]) userData[currentUser] = {};
-            
-            // 更新記憶體中的資料
-            const wasCompleted = userData[currentUser][dateStr];
-            userData[currentUser][dateStr] = !wasCompleted;
-            
-            // 重新渲染整個頁面，確保所有統計數據和畫面都同步
-            renderCurrentTab(); 
-            
-            // 在背景將變動同步到 Google Sheets
-            await syncToGoogleSheets(currentUser, dateStr, !wasCompleted);
+        // index.html
+        async function syncToGoogleSheets(userId, dateStr, completed) {
+            try {
+                // 主要修改點：將 Content-Type 改為 text/plain，並移除 headers 物件
+                // 因為 fetch 預設就是 text/plain，我們甚至不需要明確設定 headers
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    // headers 不再需要，body 直接傳送字串
+                    body: JSON.stringify({ user: userId, date: dateStr, completed: completed })
+                });
+                console.log(`同步請求已發送: ${userId}, ${dateStr}, ${completed}`);
+            } catch (error) {
+                console.error('同步到 Google Sheets 失敗:', error);
+            }
         }
         
         function updateStats() {
