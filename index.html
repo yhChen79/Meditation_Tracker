@@ -172,31 +172,36 @@
             createCalendar();
         }
 
+       // index.html 中的 JavaScript 部分
+
         function createCalendar() {
             const grid = document.getElementById('calendarGrid');
             if (!currentUser) {
                 grid.innerHTML = '<div class="loading">請先選擇一位使用者</div>';
+                // 清空統計數據
+                document.getElementById('monthlyCount').textContent = '-';
+                document.getElementById('streakCount').textContent = '-';
                 return;
             }
             
             const monthElement = document.getElementById('currentMonth');
             monthElement.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
             grid.innerHTML = '';
-
+        
             dayNames.forEach(day => {
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'day-header';
                 dayHeader.textContent = day;
                 grid.appendChild(dayHeader);
             });
-
+        
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const startDate = new Date(firstDay);
             startDate.setDate(startDate.getDate() - firstDay.getDay());
             
             const today = new Date();
             const todayStr = formatDate(today);
-
+        
             for (let i = 0; i < 42; i++) {
                 const cellDate = new Date(startDate);
                 cellDate.setDate(startDate.getDate() + i);
@@ -212,13 +217,23 @@
                 }
                 
                 cell.innerHTML = `<span class="day-number">${cellDate.getDate()}</span>`;
+                
+                // --- ✅ 這裡就是修正點 ---
+                // 我們將點擊後要執行的動作，完整地放在這個匿名函式內部
                 cell.addEventListener('click', () => {
+                    // 檢查是否為未來日期
                     if (cellDate > new Date().setHours(23, 59, 59, 999)) {
                         alert("不能記錄未來的日期！");
                         return;
                     }
-                    if (isCurrentMonth) toggleDay(dateStr);
+                    // 檢查是否為當前月份的日期
+                    if (isCurrentMonth) {
+                        // 直接在這裡呼叫全域的 toggleDay 函式
+                        toggleDay(dateStr);
+                    }
                 });
+                // --- ✅ 修正結束 ---
+                
                 grid.appendChild(cell);
             }
             updateStats();
