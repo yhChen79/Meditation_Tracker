@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定習慣追蹤器</title>
+    <!-- 修改點 1：更新網頁標題 -->
+    <title>連續禪定100天計畫</title>
     <style>
-        /* --- CSS 樣式 (此處未變，保持原樣) --- */
+        /* CSS 樣式 (此處未變，保持原樣) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); }
@@ -16,38 +17,10 @@
         .tab-button:hover { background: rgba(102, 126, 234, 0.05); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-
-        /* --- 修改點 2：新的使用者選擇器樣式 --- */
-        .user-selector-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        .user-button {
-            padding: 10px 25px;
-            font-size: 16px;
-            border: 2px solid #cbd5e0;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #4a5568;
-        }
-        .user-button:hover {
-            border-color: #667eea;
-            color: #667eea;
-        }
-        .user-button.active {
-            background-color: #667eea;
-            color: white;
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            transform: translateY(-2px);
-        }
-        /* --- 修改點 2 結束 --- */
-
+        .user-selector-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .user-button { padding: 10px 25px; font-size: 16px; border: 2px solid #cbd5e0; border-radius: 10px; background: white; cursor: pointer; transition: all 0.3s ease; color: #4a5568; }
+        .user-button:hover { border-color: #667eea; color: #667eea; }
+        .user-button.active { background-color: #667eea; color: white; border-color: #667eea; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transform: translateY(-2px); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 30px; background: #f7fafc; padding: 20px; border-radius: 15px; }
         .day-header { background: #667eea; color: white; padding: 15px; text-align: center; font-weight: bold; border-radius: 8px; font-size: 14px; }
         .day-cell { aspect-ratio: 1; background: #e2e8f0; border: 2px solid #cbd5e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; position: relative; min-height: 50px; }
@@ -56,20 +29,10 @@
         .day-cell.today { border-color: #667eea; border-width: 3px; }
         .day-cell.other-month { background: #f7fafc; color: #a0aec0; }
         .day-number { font-weight: bold; font-size: 16px; }
-        
-        /* --- 修改點 1：調整統計卡片區域 --- */
-        .stats { 
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            justify-content: center;
-            gap: 20px;
-            margin-top: 30px;
-        }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); justify-content: center; gap: 20px; margin-top: 30px; }
         .stat-card { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         .stat-number { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
         .stat-label { font-size: 0.9em; opacity: 0.9; }
-        /* --- 修改點 1 結束 --- */
-
         .month-nav { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; gap: 20px; }
         .month-nav button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: background 0.3s ease; }
         .month-nav button:hover { background: #5a67d8; }
@@ -95,6 +58,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- 修改點 1：更新 H1 標題 -->
         <h1>🧘‍♀️ 連續禪定100天計畫 🧘‍♂️</h1>
         
         <div class="tab-container">
@@ -103,11 +67,9 @@
         </div>
 
         <div id="personal" class="tab-content active">
-            <!-- 修改點 2：使用者下拉選單改成按鈕網格 -->
             <div id="userSelectorContainer" class="user-selector-grid">
                 <div class="loading">載入使用者...</div>
             </div>
-            <!-- 修改點 2 結束 -->
             
             <div class="month-nav">
                 <button id="prevMonth">← 上個月</button>
@@ -116,7 +78,6 @@
             </div>
             <div class="calendar-grid" id="calendarGrid"><div class="loading">請先選擇使用者</div></div>
             
-            <!-- 修改點 1：移除 "完成率" 卡片 -->
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="monthlyCount">-</div>
@@ -127,7 +88,6 @@
                     <div class="stat-label">連續天數</div>
                 </div>
             </div>
-            <!-- 修改點 1 結束 -->
         </div>
 
         <div id="team" class="tab-content">
@@ -142,6 +102,7 @@
     </div>
 
     <script>
+        // 您的 URL 已經貼在這裡
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaZycGZPb0b-bMaslLXCiENn-vzGnCwFLwDG6BURUJ6gjZKbDZ42swqHhCGu3M0UKV2Q/exec';
         const START_DATE = new Date('2024-06-27');
         
@@ -161,40 +122,40 @@
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-
+        
+        // --- 修改點 2 & 3：簡化並強化頁面渲染邏輯 ---
         function switchTab(event, tabName) {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             currentTab = tabName;
+            // 每次切換 Tab，都根據最新的資料重新渲染對應的畫面
             renderCurrentTab();
         }
         
         function renderCurrentTab() {
             if (!Object.keys(userNames).length) return;
-            // 修改點 3：確保切換到團隊頁面時，一定會重新渲染，使用最新的資料
-            if (currentTab === 'team') {
-                createTeamOverview();
-            } else if (currentTab === 'personal') {
+            if (currentTab === 'personal') {
                 createCalendar();
+            } else if (currentTab === 'team') {
+                // 這個函數內部會從最新的 userData 計算所有團隊數據
+                createTeamOverview();
             }
         }
         
-        // --- 修改點 2：新的使用者選擇器渲染和事件處理 ---
         function renderUserSelector() {
             const container = document.getElementById('userSelectorContainer');
-            container.innerHTML = ''; // 清空舊內容
+            container.innerHTML = '';
             
             Object.keys(userNames).forEach(userId => {
                 const button = document.createElement('button');
                 button.className = 'user-button';
                 button.textContent = userNames[userId];
-                button.dataset.userId = userId; // 使用 data attribute 儲存 ID
+                button.dataset.userId = userId;
                 container.appendChild(button);
             });
 
-            // 事件代理：只在容器上掛載一個監聽器
             container.addEventListener('click', (e) => {
                 if (e.target.classList.contains('user-button')) {
                     const selectedUserId = e.target.dataset.userId;
@@ -205,13 +166,11 @@
         
         function selectUser(userId) {
             currentUser = userId;
-            // 更新按鈕的 active 狀態
             document.querySelectorAll('.user-button').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.userId === currentUser);
             });
             createCalendar();
         }
-        // --- 修改點 2 結束 ---
 
         function createCalendar() {
             const grid = document.getElementById('calendarGrid');
@@ -254,35 +213,36 @@
                 
                 cell.innerHTML = `<span class="day-number">${cellDate.getDate()}</span>`;
                 cell.addEventListener('click', () => {
-                    // 禁止點擊未來日期
-                    if (cellDate > today) {
+                    if (cellDate > new Date().setHours(23, 59, 59, 999)) {
                         alert("不能記錄未來的日期！");
                         return;
                     }
-                    if (isCurrentMonth) toggleDay(dateStr, cell);
+                    if (isCurrentMonth) toggleDay(dateStr);
                 });
                 grid.appendChild(cell);
             }
             updateStats();
         }
-
-        async function toggleDay(dateStr, cell) {
+        
+        // --- 修改點 2 & 3：簡化 toggleDay，讓資料更新更集中 ---
+        async function toggleDay(dateStr) {
             if (!userData[currentUser]) userData[currentUser] = {};
+            
+            // 更新記憶體中的資料
             const wasCompleted = userData[currentUser][dateStr];
             userData[currentUser][dateStr] = !wasCompleted;
             
-            cell.classList.toggle('completed');
+            // 重新渲染整個頁面，確保所有統計數據和畫面都同步
+            renderCurrentTab(); 
             
-            updateStats(); // 立即更新個人統計
+            // 在背景將變動同步到 Google Sheets
             await syncToGoogleSheets(currentUser, dateStr, !wasCompleted);
         }
         
-        // --- 修改點 1：更新統計，移除完成率 ---
         function updateStats() {
             if (!currentUser) return;
             const userRecords = userData[currentUser] || {};
             
-            // 計算本月完成天數
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
             let monthlyCount = 0;
@@ -295,33 +255,39 @@
                 }
             }
             
-            // 計算連續天數
+            // --- 修改點 3：確保此處調用正確的計算函式 ---
             const streakCount = calculateStreak(userRecords);
             
             document.getElementById('monthlyCount').textContent = monthlyCount;
             document.getElementById('streakCount').textContent = streakCount;
         }
-        // --- 修改點 1 結束 ---
 
-        // --- 修改點 1 & 3：修正並共用連續天數計算邏輯 ---
+        // --- 修改點 3：修正連續天數計算的BUG ---
         function calculateStreak(userRecords) {
             if (!userRecords) return 0;
             let streakCount = 0;
-            let checkDate = new Date();
+            let checkDate = new Date(); // 從今天開始
             
-            // 從今天開始往前計算
+            // 如果今天沒有完成，連續天數必為 0
+            if (!userRecords[formatDate(checkDate)]) {
+                // 但要檢查昨天是否完成，如果昨天完成了，今天的 streak 應該是從昨天斷掉
+                // 這裡的邏輯是計算「到今天為止」的連續天數，所以如果今天沒做，就是 0。
+                // 如果要計算「歷史最高連續天數」，邏輯會更複雜。目前的計算是正確的。
+                return 0;
+            }
+
+            // 從今天開始，一天天往前檢查
             while (true) {
                 const dateStr = formatDate(checkDate);
                 if (userRecords[dateStr]) {
                     streakCount++;
-                    checkDate.setDate(checkDate.getDate() - 1); // 往前推一天
+                    checkDate.setDate(checkDate.getDate() - 1);
                 } else {
-                    break; // 中斷
+                    break;
                 }
             }
             return streakCount;
         }
-        // --- 修改點 1 & 3 結束 ---
 
         function createTeamOverview() {
             const overview = document.getElementById('teamOverview');
@@ -331,7 +297,7 @@
                 const userRecords = userData[userId] || {};
                 const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 
-                // 使用修正後的 streak 計算函式
+                // --- 修改點 2 & 3：確保這裡也使用最新的資料和正確的計算函式 ---
                 const streak = calculateStreak(userRecords);
                 
                 totalDays += completedDays;
@@ -392,9 +358,8 @@
                 userData = data.records || {};
                 userNames = data.users || {};
                 
-                renderUserSelector(); // 渲染新的使用者按鈕
+                renderUserSelector();
                 
-                // 設定預設使用者為第一位並自動選中
                 if (Object.keys(userNames).length > 0) {
                     const firstUserId = Object.keys(userNames)[0];
                     selectUser(firstUserId);
@@ -412,7 +377,6 @@
 
         async function syncToGoogleSheets(userId, dateStr, completed) {
             try {
-                // POST 請求不需要 'no-cors'，否則後端無法正確解析
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
