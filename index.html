@@ -5,660 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>禪定習慣追蹤器</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: #4a5568;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 頁簽樣式 */
-        .tab-container {
-            display: flex;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 15px 30px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: #4a5568;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-
-        .tab-button.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        .tab-button:hover {
-            background: rgba(102, 126, 234, 0.05);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* 個人追蹤頁面樣式 */
-        .user-selector {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .user-selector select {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 3px;
-            margin-bottom: 30px;
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .day-header {
-            background: #667eea;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .day-cell {
-            aspect-ratio: 1;
-            background: #e2e8f0;
-            border: 2px solid #cbd5e0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            min-height: 50px;
-        }
-
-        .day-cell:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .day-cell.completed {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            border-color: #38a169;
-        }
-
-        .day-cell.today {
-            border-color: #667eea;
-            border-width: 3px;
-        }
-
-        .day-cell.other-month {
-            background: #f7fafc;
-            color: #a0aec0;
-        }
-
-        .day-number {
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-
-        .month-nav {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 20px;
-        }
-
-        .month-nav button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background 0.3s ease;
-        }
-
-        .month-nav button:hover {
-            background: #5a67d8;
-        }
-
-        .month-nav h2 {
-            color: #4a5568;
-            font-size: 1.5em;
-        }
-
-        /* 團隊總覽頁面樣式 */
-        .team-overview {
-            background: #f7fafc;
-            padding: 20px;
-            border-radius: 15px;
-        }
-
-        .user-row {
-            display: flex;
-            align-items: center;
-            background: white;
-            margin-bottom: 15px;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease;
-        }
-
-        .user-row:hover {
-            transform: translateY(-2px);
-        }
-
-        .user-info {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-name {
-            font-weight: bold;
-            font-size: 18px;
-            color: #4a5568;
-            min-width: 80px;
-        }
-
-        .streak-info {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .habit-grid {
-            display: flex;
-            gap: 2px;
-            flex-wrap: wrap;
-        }
-
-        .habit-cell {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            background: #e2e8f0;
-            border: 1px solid #cbd5e0;
-            transition: all 0.2s ease;
-        }
-
-        .habit-cell.completed {
-            background: #48bb78;
-            border-color: #38a169;
-        }
-
-        .habit-cell.today {
-            border-color: #667eea;
-            border-width: 2px;
-        }
-
-        .habit-cell:hover {
-            transform: scale(1.2);
-        }
-
-        .habit-cell.future {
-            background: #f7fafc;
-            border-color: #e2e8f0;
-            opacity: 0.6;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #4a5568;
-        }
-
-        .team-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .team-stat-card {
-            background: linear-gradient(135deg, #805ad5, #6b46c1);
-            color: white;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .team-stat-number {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .team-stat-label {
-            font-size: 0.85em;
-            opacity: 0.9;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #4a5568; margin-bottom: 30px; font-size: 2.5em; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1); }
+        .tab-container { display: flex; margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; }
+        .tab-button { flex: 1; padding: 15px 30px; background: none; border: none; font-size: 16px; cursor: pointer; color: #4a5568; transition: all 0.3s ease; border-bottom: 3px solid transparent; }
+        .tab-button.active { color: #667eea; border-bottom-color: #667eea; background: rgba(102, 126, 234, 0.1); }
+        .tab-button:hover { background: rgba(102, 126, 234, 0.05); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .user-selector { text-align: center; margin-bottom: 30px; }
+        .user-selector select { padding: 10px 20px; font-size: 16px; border: 2px solid #667eea; border-radius: 10px; background: white; cursor: pointer; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 30px; background: #f7fafc; padding: 20px; border-radius: 15px; }
+        .day-header { background: #667eea; color: white; padding: 15px; text-align: center; font-weight: bold; border-radius: 8px; font-size: 14px; }
+        .day-cell { aspect-ratio: 1; background: #e2e8f0; border: 2px solid #cbd5e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; position: relative; min-height: 50px; }
+        .day-cell:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .day-cell.completed { background: linear-gradient(135deg, #48bb78, #38a169); color: white; border-color: #38a169; }
+        .day-cell.today { border-color: #667eea; border-width: 3px; }
+        .day-cell.other-month { background: #f7fafc; color: #a0aec0; }
+        .day-number { font-weight: bold; font-size: 16px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
+        .stat-card { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .stat-number { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 0.9em; opacity: 0.9; }
+        .month-nav { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; gap: 20px; }
+        .month-nav button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: background 0.3s ease; }
+        .month-nav button:hover { background: #5a67d8; }
+        .month-nav h2 { color: #4a5568; font-size: 1.5em; }
+        .team-overview { background: #f7fafc; padding: 20px; border-radius: 15px; }
+        .user-row { display: flex; align-items: center; background: white; margin-bottom: 15px; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); transition: transform 0.2s ease; }
+        .user-row:hover { transform: translateY(-2px); }
+        .user-info { flex: 1; display: flex; align-items: center; gap: 15px; }
+        .user-name { font-weight: bold; font-size: 18px; color: #4a5568; min-width: 80px; }
+        .streak-info { background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .habit-grid { display: flex; gap: 2px; flex-wrap: wrap; }
+        .habit-cell { width: 12px; height: 12px; border-radius: 2px; background: #e2e8f0; border: 1px solid #cbd5e0; transition: all 0.2s ease; }
+        .habit-cell.completed { background: #48bb78; border-color: #38a169; }
+        .habit-cell.today { border-color: #667eea; border-width: 2px; }
+        .habit-cell:hover { transform: scale(1.2); }
+        .habit-cell.future { background: #f7fafc; border-color: #e2e8f0; opacity: 0.6; }
+        .loading { text-align: center; padding: 20px; color: #4a5568; }
+        .team-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .team-stat-card { background: linear-gradient(135deg, #805ad5, #6b46c1); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .team-stat-number { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
+        .team-stat-label { font-size: 0.85em; opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🧘‍♀️ 禪定習慣追蹤器 🧘‍♂️</h1>
         
-        <!-- 頁簽選單 -->
         <div class="tab-container">
-            <button class="tab-button active" onclick="switchTab('personal')">個人追蹤</button>
-            <button class="tab-button" onclick="switchTab('team')">團隊總覽</button>
+            <button class="tab-button active" onclick="switchTab(event, 'personal')">個人追蹤</button>
+            <button class="tab-button" onclick="switchTab(event, 'team')">團隊總覽</button>
         </div>
 
-        <!-- 個人追蹤頁面 -->
         <div id="personal" class="tab-content active">
             <div class="user-selector">
                 <select id="userSelect">
-                    <option value="user1">張三</option>
-                    <option value="user2">李四</option>
-                    <option value="user3">王五</option>
-                    <option value="user4">趙六</option>
+                    <option>載入中...</option>
                 </select>
             </div>
-
             <div class="month-nav">
                 <button id="prevMonth">← 上個月</button>
                 <h2 id="currentMonth"></h2>
                 <button id="nextMonth">下個月 →</button>
             </div>
-
-            <div class="calendar-grid" id="calendarGrid">
-                <div class="loading">載入中...</div>
-            </div>
-
+            <div class="calendar-grid" id="calendarGrid"><div class="loading">載入中...</div></div>
             <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="monthlyCount">-</div>
-                    <div class="stat-label">本月完成天數</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="streakCount">-</div>
-                    <div class="stat-label">連續天數</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="completionRate">-</div>
-                    <div class="stat-label">完成率</div>
-                </div>
+                <div class="stat-card"><div class="stat-number" id="monthlyCount">-</div><div class="stat-label">本月完成天數</div></div>
+                <div class="stat-card"><div class="stat-number" id="streakCount">-</div><div class="stat-label">連續天數</div></div>
+                <div class="stat-card"><div class="stat-number" id="completionRate">-</div><div class="stat-label">完成率</div></div>
             </div>
         </div>
 
-        <!-- 團隊總覽頁面 -->
         <div id="team" class="tab-content">
             <div class="team-stats">
-                <div class="team-stat-card">
-                    <div class="team-stat-number" id="totalTeamDays">-</div>
-                    <div class="team-stat-label">團隊總天數</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="team-stat-number" id="activeUsers">-</div>
-                    <div class="team-stat-label">活躍成員</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="team-stat-number" id="avgStreak">-</div>
-                    <div class="team-stat-label">平均連續天數</div>
-                </div>
-                <div class="team-stat-card">
-                    <div class="team-stat-number" id="topStreak">-</div>
-                    <div class="team-stat-label">最高連續天數</div>
-                </div>
+                <div class="team-stat-card"><div class="team-stat-number" id="totalTeamDays">-</div><div class="team-stat-label">團隊總天數</div></div>
+                <div class="team-stat-card"><div class="team-stat-number" id="activeUsers">-</div><div class="team-stat-label">活躍成員</div></div>
+                <div class="team-stat-card"><div class="team-stat-number" id="avgStreak">-</div><div class="team-stat-label">平均連續天數</div></div>
+                <div class="team-stat-card"><div class="team-stat-number" id="topStreak">-</div><div class="team-stat-label">最高連續天數</div></div>
             </div>
-
-            <div class="team-overview" id="teamOverview">
-                <div class="loading">載入中...</div>
-            </div>
+            <div class="team-overview" id="teamOverview"><div class="loading">載入中...</div></div>
         </div>
     </div>
 
     <script>
-        // Google Apps Script Web App URL
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQA6DvX4wO3-Pk8mvSiiZHl5Xy2oe2ahxCp691DeBPwzeC6R2eECyIvxuGo4SAEGdpSA/exec';
-        
-        // 追蹤期間起始日期（6/27開始）
+        const GOOGLE_SCRIPT_URL = '在此貼上您新部署的Apps Script網頁應用程式URL';
         const START_DATE = new Date('2024-06-27');
         
-        // 資料庫 - 從 Google Sheets 載入
-        let userData = {
-            user1: {
-                '2024-06-27': true, '2024-06-28': true, '2024-06-29': true,
-                '2024-07-01': true, '2024-07-02': true, '2024-07-05': true,
-                '2024-07-07': true, '2024-07-10': true, '2024-07-12': true,
-                '2024-07-13': true
-            },
-            user2: {
-                '2024-06-27': true, '2024-06-28': true, '2024-06-29': true,
-                '2024-07-01': true, '2024-07-04': true, '2024-07-06': true,
-                '2024-07-08': true, '2024-07-11': true, '2024-07-13': true
-            },
-            user3: {
-                '2024-06-27': true, '2024-06-28': true, '2024-06-29': true,
-                '2024-07-02': true, '2024-07-03': true, '2024-07-09': true,
-                '2024-07-13': true
-            },
-            user4: {
-                '2024-06-27': true, '2024-06-28': true, '2024-06-29': true,
-                '2024-07-01': true, '2024-07-05': true, '2024-07-07': true,
-                '2024-07-12': true
-            }
-        };
-
-        const userNames = {
-            user1: '張三',
-            user2: '李四',
-            user3: '王五',
-            user4: '趙六'
-        };
-
+        let userData = {};
+        let userNames = {};
+        
         let currentDate = new Date();
-        let currentUser = 'user1';
+        let currentUser = '';
         let currentTab = 'personal';
 
         const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
-        const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
-                          '七月', '八月', '九月', '十月', '十一月', '十二月'];
+        const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
         function formatDate(date) {
             return date.toISOString().split('T')[0];
         }
 
-        function switchTab(tabName) {
-            // 更新頁簽按鈕樣式
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
+        function switchTab(event, tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-
-            // 切換頁面內容
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
-
             currentTab = tabName;
-
-            // 根據頁簽載入對應內容
-            if (tabName === 'personal') {
+            renderCurrentTab();
+        }
+        
+        function renderCurrentTab() {
+            if (!Object.keys(userNames).length) return; // 如果資料還沒載入，則不渲染
+            if (currentTab === 'personal') {
                 createCalendar();
-            } else if (tabName === 'team') {
+            } else if (currentTab === 'team') {
                 createTeamOverview();
             }
         }
 
         function createCalendar() {
+            if (!currentUser) return;
             const grid = document.getElementById('calendarGrid');
             const monthElement = document.getElementById('currentMonth');
-            
-            // 更新月份標題
             monthElement.textContent = `${currentDate.getFullYear()}年 ${monthNames[currentDate.getMonth()]}`;
-            
-            // 清空網格
             grid.innerHTML = '';
-            
-            // 建立星期標題
+
             dayNames.forEach(day => {
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'day-header';
                 dayHeader.textContent = day;
                 grid.appendChild(dayHeader);
             });
-            
-            // 取得月份第一天和最後一天
+
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
             const startDate = new Date(firstDay);
             startDate.setDate(startDate.getDate() - firstDay.getDay());
             
-            // 建立日期格子
             const today = new Date();
             const todayStr = formatDate(today);
-            
+
             for (let i = 0; i < 42; i++) {
                 const cellDate = new Date(startDate);
                 cellDate.setDate(startDate.getDate() + i);
-                
                 const cell = document.createElement('div');
                 cell.className = 'day-cell';
-                
                 const dateStr = formatDate(cellDate);
                 const isCurrentMonth = cellDate.getMonth() === currentDate.getMonth();
-                const isToday = dateStr === todayStr;
-                const isCompleted = userData[currentUser] && userData[currentUser][dateStr];
                 
-                if (!isCurrentMonth) {
-                    cell.classList.add('other-month');
-                }
-                
-                if (isToday) {
-                    cell.classList.add('today');
-                }
-                
-                if (isCompleted) {
+                if (!isCurrentMonth) cell.classList.add('other-month');
+                if (dateStr === todayStr) cell.classList.add('today');
+                if (userData[currentUser] && userData[currentUser][dateStr]) {
                     cell.classList.add('completed');
                 }
                 
                 cell.innerHTML = `<span class="day-number">${cellDate.getDate()}</span>`;
-                
-                // 點擊事件
                 cell.addEventListener('click', () => {
-                    if (isCurrentMonth) {
-                        toggleDay(dateStr, cell);
-                    }
+                    if (isCurrentMonth) toggleDay(dateStr, cell);
                 });
-                
                 grid.appendChild(cell);
             }
-            
             updateStats();
         }
 
         async function toggleDay(dateStr, cell) {
-            if (!userData[currentUser]) {
-                userData[currentUser] = {};
-            }
-            
+            if (!userData[currentUser]) userData[currentUser] = {};
             const wasCompleted = userData[currentUser][dateStr];
             userData[currentUser][dateStr] = !wasCompleted;
             
-            // 更新視覺效果
-            if (userData[currentUser][dateStr]) {
-                cell.classList.add('completed');
-            } else {
-                cell.classList.remove('completed');
-            }
+            cell.classList.toggle('completed');
             
-            // 同步到 Google Sheets
-            await syncToGoogleSheets(currentUser, dateStr, userData[currentUser][dateStr]);
-            
-            updateStats();
+            updateStats(); // 先更新UI，然後在背景同步
+            await syncToGoogleSheets(currentUser, dateStr, !wasCompleted);
         }
 
         function updateStats() {
+            if (!currentUser) return;
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
             const userRecords = userData[currentUser] || {};
             
-            // 計算本月完成天數
             let monthlyCount = 0;
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                if (userRecords[dateStr]) {
-                    monthlyCount++;
-                }
+                if (userRecords[dateStr]) monthlyCount++;
             }
             
-            // 計算連續天數
-            let streakCount = 0;
-            const today = new Date();
-            let checkDate = new Date(today);
-            
-            while (true) {
-                const dateStr = formatDate(checkDate);
-                if (userRecords[dateStr]) {
-                    streakCount++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    break;
-                }
-            }
-            
-            // 計算完成率
+            const streakCount = calculateStreak(userRecords);
             const completionRate = Math.round((monthlyCount / daysInMonth) * 100);
             
-            // 更新顯示
             document.getElementById('monthlyCount').textContent = monthlyCount;
             document.getElementById('streakCount').textContent = streakCount;
             document.getElementById('completionRate').textContent = completionRate + '%';
         }
 
         function calculateStreak(userRecords) {
-            const today = new Date();
             let streakCount = 0;
-            let checkDate = new Date(today);
-            
-            while (true) {
-                const dateStr = formatDate(checkDate);
-                if (userRecords[dateStr]) {
-                    streakCount++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    break;
-                }
+            let checkDate = new Date();
+            while (userRecords[formatDate(checkDate)]) {
+                streakCount++;
+                checkDate.setDate(checkDate.getDate() - 1);
             }
-            
             return streakCount;
         }
 
         function createTeamOverview() {
             const overview = document.getElementById('teamOverview');
+            let totalDays = 0, activeUsers = 0, totalStreak = 0, maxStreak = 0;
             
-            // 計算每個用戶的數據
-            const userStats = [];
-            let totalDays = 0;
-            let activeUsers = 0;
-            let totalStreak = 0;
-            let maxStreak = 0;
-            
-            Object.keys(userData).forEach(userId => {
+            const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
                 const completedDays = Object.values(userRecords).filter(Boolean).length;
                 const streak = calculateStreak(userRecords);
-                
-                userStats.push({
-                    userId: userId,
-                    name: userNames[userId],
-                    completedDays: completedDays,
-                    streak: streak,
-                    records: userRecords
-                });
                 
                 totalDays += completedDays;
                 if (completedDays > 0) activeUsers++;
                 totalStreak += streak;
                 if (streak > maxStreak) maxStreak = streak;
+
+                return { userId, name: userNames[userId], completedDays, streak, records: userRecords };
             });
             
-            // 按連續天數排序
             userStats.sort((a, b) => b.streak - a.streak);
             
-            // 更新團隊統計
             document.getElementById('totalTeamDays').textContent = totalDays;
             document.getElementById('activeUsers').textContent = activeUsers;
-            document.getElementById('avgStreak').textContent = Math.round(totalStreak / userStats.length);
+            document.getElementById('avgStreak').textContent = userStats.length > 0 ? Math.round(totalStreak / userStats.length) : 0;
             document.getElementById('topStreak').textContent = maxStreak;
             
-            // 建立用戶列表
             overview.innerHTML = '';
-            
             const today = new Date();
             const todayStr = formatDate(today);
             
             userStats.forEach(user => {
                 const userRow = document.createElement('div');
                 userRow.className = 'user-row';
-                
-                // 建立從 6/27 開始的 100 天小方格
                 const habitGrid = document.createElement('div');
                 habitGrid.className = 'habit-grid';
                 
@@ -671,84 +258,69 @@
                     cell.className = 'habit-cell';
                     cell.title = dateStr;
                     
-                    // 判斷是否為未來日期
-                    const isFuture = cellDate > today;
-                    
-                    if (isFuture) {
-                        cell.classList.add('future');
-                    } else if (user.records[dateStr]) {
-                        cell.classList.add('completed');
-                    }
-                    
-                    if (dateStr === todayStr) {
-                        cell.classList.add('today');
-                    }
+                    if (cellDate > today) cell.classList.add('future');
+                    else if (user.records[dateStr]) cell.classList.add('completed');
+                    if (dateStr === todayStr) cell.classList.add('today');
                     
                     habitGrid.appendChild(cell);
                 }
                 
-                userRow.innerHTML = `
-                    <div class="user-info">
-                        <div class="user-name">${user.name}</div>
-                        <div class="streak-info">連續 ${user.streak} 天</div>
-                    </div>
-                `;
-                
+                userRow.innerHTML = `<div class="user-info"><div class="user-name">${user.name}</div><div class="streak-info">連續 ${user.streak} 天</div></div>`;
                 userRow.appendChild(habitGrid);
                 overview.appendChild(userRow);
             });
         }
 
-        // 從 Google Sheets 載入資料
         async function loadDataFromGoogleSheets() {
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const data = await response.json();
+
+                if (data.error) throw new Error(`Script error: ${data.error}`);
+
+                userData = data.records || {};
+                userNames = data.users || {};
                 
-                // 更新本地資料
-                userData = data;
+                // 動態填充使用者下拉選單
+                const userSelect = document.getElementById('userSelect');
+                userSelect.innerHTML = '';
+                Object.keys(userNames).forEach(userId => {
+                    const option = document.createElement('option');
+                    option.value = userId;
+                    option.textContent = userNames[userId];
+                    userSelect.appendChild(option);
+                });
                 
-                // 重新渲染當前頁面
-                if (currentTab === 'personal') {
-                    createCalendar();
-                } else if (currentTab === 'team') {
-                    createTeamOverview();
+                // 設定預設使用者
+                if (Object.keys(userNames).length > 0) {
+                    currentUser = Object.keys(userNames)[0];
+                    userSelect.value = currentUser;
                 }
                 
                 console.log('資料已從 Google Sheets 載入');
+                renderCurrentTab(); // 載入資料後渲染畫面
+
             } catch (error) {
                 console.error('載入 Google Sheets 資料失敗:', error);
+                document.getElementById('calendarGrid').innerHTML = `<div class="loading" style="color:red;">資料載入失敗！請檢查 GOOGLE_SCRIPT_URL 或 Apps Script 部署設定。</div>`;
             }
         }
 
-        // 同步到 Google Sheets
         async function syncToGoogleSheets(userId, dateStr, completed) {
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user: userId,
-                        date: dateStr,
-                        completed: completed
-                    })
+                    mode: 'no-cors', // POST 請求到 Apps Script 通常需要 no-cors
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: userId, date: dateStr, completed: completed })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    console.log('資料已同步到 Google Sheets');
-                } else {
-                    console.error('同步失敗:', result.error);
-                }
+                console.log('同步請求已發送');
             } catch (error) {
                 console.error('同步到 Google Sheets 失敗:', error);
             }
         }
 
-        // 事件監聽器
         document.getElementById('userSelect').addEventListener('change', (e) => {
             currentUser = e.target.value;
             createCalendar();
@@ -764,10 +336,8 @@
             createCalendar();
         });
 
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             loadDataFromGoogleSheets();
-            createCalendar();
         });
     </script>
 </body>
