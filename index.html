@@ -52,6 +52,7 @@
         .team-stat-card { background: linear-gradient(135deg, #805ad5, #6b46c1); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         .team-stat-number { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
         .team-stat-label { font-size: 0.85em; opacity: 0.9; }
+        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; }
     </style>
 </head>
 <body>
@@ -84,7 +85,14 @@
                     <div class="stat-number" id="streakCount">-</div>
                     <div class="stat-label">連續天數</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDays">-</div>
+                    <div class="stat-label">總完成天數</div>
+                </div>
             </div>
+            
+            <!-- 偵錯資訊 -->
+            <div id="debugInfo" class="debug-info" style="display: none;"></div>
         </div>
 
         <div id="team" class="tab-content">
@@ -108,6 +116,7 @@
         let currentDate = new Date();
         let currentUser = '';
         let currentTab = 'personal';
+        let debugMode = false; // 設為 true 來顯示偵錯資訊
 
         const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
         const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
@@ -117,6 +126,15 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
+        }
+        
+        function debugLog(message) {
+            if (debugMode) {
+                console.log(message);
+                const debugDiv = document.getElementById('debugInfo');
+                debugDiv.style.display = 'block';
+                debugDiv.innerHTML += message + '<br>';
+            }
         }
         
         function switchTab(event, tabName) {
@@ -171,6 +189,7 @@
                 grid.innerHTML = '<div class="loading">請先選擇一位使用者</div>';
                 document.getElementById('monthlyCount').textContent = '-';
                 document.getElementById('streakCount').textContent = '-';
+                document.getElementById('totalDays').textContent = '-';
                 return;
             }
             
@@ -251,6 +270,9 @@
             if (!currentUser) return;
             const userRecords = userData[currentUser] || {};
             
+            debugLog(`更新統計資料 - 使用者: ${currentUser}`);
+            debugLog(`使用者記錄: ${JSON.stringify(userRecords)}`);
+            
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
             let monthlyCount = 0;
@@ -263,41 +285,53 @@
                 }
             }
             
+            // 計算總完成天數
+            const totalDays = Object.keys(userRecords).filter(date => userRecords[date]).length;
+            
+            // 修正的連續天數計算
             const streakCount = calculateStreak(userRecords);
+            
+            debugLog(`本月完成天數: ${monthlyCount}, 連續天數: ${streakCount}, 總天數: ${totalDays}`);
             
             document.getElementById('monthlyCount').textContent = monthlyCount;
             document.getElementById('streakCount').textContent = streakCount;
+            document.getElementById('totalDays').textContent = totalDays;
         }
 
         function calculateStreak(userRecords) {
-            if (!userRecords) return 0;
+            if (!userRecords || Object.keys(userRecords).length === 0) {
+                debugLog('沒有記錄，連續天數為 0');
+                return 0;
+            }
+            
             let streakCount = 0;
             let checkDate = new Date();
             
+            // 設定檢查日期為今天的 00:00:00
+            checkDate.setHours(0, 0, 0, 0);
+            
+            debugLog(`開始計算連續天數，從 ${formatDate(checkDate)} 開始`);
+            
+            // 從今天開始往前檢查
             while (true) {
                 const dateStr = formatDate(checkDate);
+                debugLog(`檢查日期: ${dateStr}, 是否完成: ${userRecords[dateStr] ? '是' : '否'}`);
+                
                 if (userRecords[dateStr]) {
                     streakCount++;
+                    debugLog(`連續天數增加到: ${streakCount}`);
+                    // 往前一天
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
-                    // 如果今天之前的某一天中斷了，就要檢查中斷點是不是今天
-                    // 如果是今天中斷，且 streakCount > 0，代表是昨天還連續
-                    // 但我們的目標是計算「到今天為止」的連續天數
-                    // 所以如果今天沒做，就算昨天有做，連續天數也是 0
-                    if(formatDate(new Date()) === dateStr) {
-                       // 今天就中斷了，不用繼續
-                    } else {
-                       // 過去的某一天中斷了，streakCount 就是從昨天往前的天數
-                       // 但因為我們是從今天開始算的，所以這個邏輯可以簡化
-                       return streakCount;
-                    }
-                    // 簡化邏輯：只要中斷就跳出
+                    debugLog(`在 ${dateStr} 中斷，最終連續天數: ${streakCount}`);
                     break;
                 }
-            }
-             // 如果是從今天開始算，但今天沒打卡，要確保 streak 是 0
-            if (!userRecords[formatDate(new Date())]) {
-                return 0;
+                
+                // 防止無限循環，最多檢查 365 天
+                if (streakCount > 365) {
+                    debugLog('達到最大檢查天數限制');
+                    break;
+                }
             }
             
             return streakCount;
@@ -307,10 +341,15 @@
             const overview = document.getElementById('teamOverview');
             let totalDays = 0, activeUsers = 0, totalStreak = 0, maxStreak = 0;
             
+            debugLog('開始創建團隊總覽');
+            debugLog(`使用者資料: ${JSON.stringify(userData)}`);
+            
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
                 const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 const streak = calculateStreak(userRecords);
+                
+                debugLog(`使用者 ${userId} (${userNames[userId]}) - 完成天數: ${completedDays}, 連續天數: ${streak}`);
                 
                 totalDays += completedDays;
                 if (completedDays > 0) activeUsers++;
@@ -321,6 +360,8 @@
             });
             
             userStats.sort((a, b) => b.streak - a.streak);
+            
+            debugLog(`團隊統計 - 總天數: ${totalDays}, 活躍使用者: ${activeUsers}, 平均連續: ${totalStreak / userStats.length}, 最高連續: ${maxStreak}`);
             
             document.getElementById('totalTeamDays').textContent = totalDays;
             document.getElementById('activeUsers').textContent = activeUsers;
@@ -370,6 +411,9 @@
                 userData = data.records || {};
                 userNames = data.users || {};
                 
+                debugLog(`載入的使用者資料: ${JSON.stringify(userData)}`);
+                debugLog(`載入的使用者名稱: ${JSON.stringify(userNames)}`);
+                
                 renderUserSelector();
                 
                 if (Object.keys(userNames).length > 0) {
@@ -395,6 +439,17 @@
         document.getElementById('nextMonth').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
             createCalendar();
+        });
+
+        // 新增偵錯按鈕（可選）
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                debugMode = !debugMode;
+                document.getElementById('debugInfo').style.display = debugMode ? 'block' : 'none';
+                if (debugMode) {
+                    document.getElementById('debugInfo').innerHTML = '偵錯模式已啟用<br>';
+                }
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
