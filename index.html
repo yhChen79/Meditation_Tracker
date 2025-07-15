@@ -250,6 +250,11 @@
             // 點擊後，立刻重新繪製日曆並更新個人統計數據
             createCalendar(); 
             
+            // 如果在團隊總覽頁面，也要更新團隊統計
+            if (currentTab === 'team') {
+                createTeamOverview();
+            }
+            
             await syncToGoogleSheets(currentUser, dateStr, !wasCompleted);
         }
         
@@ -307,22 +312,31 @@
             let streakCount = 0;
             let checkDate = new Date();
             
-            // 設定檢查日期為今天的 00:00:00
+            // 確保檢查日期是今天，設定為 00:00:00
             checkDate.setHours(0, 0, 0, 0);
             
             debugLog(`開始計算連續天數，從 ${formatDate(checkDate)} 開始`);
             
-            // 從今天開始往前檢查
+            // 從今天開始往前檢查，但要注意數據格式
             while (true) {
                 const dateStr = formatDate(checkDate);
-                debugLog(`檢查日期: ${dateStr}, 是否完成: ${userRecords[dateStr] ? '是' : '否'}`);
+                const isCompleted = userRecords[dateStr] === true; // 明確檢查是否為 true
                 
-                if (userRecords[dateStr]) {
+                debugLog(`檢查日期: ${dateStr}, 是否完成: ${isCompleted}, 原始值: ${userRecords[dateStr]}`);
+                
+                if (isCompleted) {
                     streakCount++;
                     debugLog(`連續天數增加到: ${streakCount}`);
                     // 往前一天
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
+                    // 如果是今天且沒有完成，不算中斷（可能還沒記錄）
+                    const todayStr = formatDate(new Date());
+                    if (dateStr === todayStr && streakCount === 0) {
+                        // 今天沒記錄，從昨天開始檢查
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        continue;
+                    }
                     debugLog(`在 ${dateStr} 中斷，最終連續天數: ${streakCount}`);
                     break;
                 }
@@ -346,7 +360,7 @@
             
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
-                const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
+                const completedDays = Object.keys(userRecords).filter(k => userRecords[k] === true).length; // 明確檢查 true
                 const streak = calculateStreak(userRecords);
                 
                 debugLog(`使用者 ${userId} (${userNames[userId]}) - 完成天數: ${completedDays}, 連續天數: ${streak}`);
@@ -361,11 +375,13 @@
             
             userStats.sort((a, b) => b.streak - a.streak);
             
-            debugLog(`團隊統計 - 總天數: ${totalDays}, 活躍使用者: ${activeUsers}, 平均連續: ${totalStreak / userStats.length}, 最高連續: ${maxStreak}`);
+            const avgStreak = userStats.length > 0 ? (totalStreak / userStats.length).toFixed(1) : 0;
+            
+            debugLog(`團隊統計 - 總天數: ${totalDays}, 活躍使用者: ${activeUsers}, 平均連續: ${avgStreak}, 最高連續: ${maxStreak}`);
             
             document.getElementById('totalTeamDays').textContent = totalDays;
             document.getElementById('activeUsers').textContent = activeUsers;
-            document.getElementById('avgStreak').textContent = userStats.length > 0 ? (totalStreak / userStats.length).toFixed(1) : 0;
+            document.getElementById('avgStreak').textContent = avgStreak;
             document.getElementById('topStreak').textContent = maxStreak;
             
             overview.innerHTML = '';
@@ -387,9 +403,15 @@
                     cell.className = 'habit-cell';
                     cell.title = dateStr;
                     
-                    if (cellDate > today) cell.classList.add('future');
-                    else if (user.records[dateStr]) cell.classList.add('completed');
-                    if (dateStr === todayStr) cell.classList.add('today');
+                    if (cellDate > today) {
+                        cell.classList.add('future');
+                    } else if (user.records[dateStr] === true) { // 明確檢查 true
+                        cell.classList.add('completed');
+                    }
+                    
+                    if (dateStr === todayStr) {
+                        cell.classList.add('today');
+                    }
                     
                     habitGrid.appendChild(cell);
                 }
