@@ -54,6 +54,58 @@
         .team-stat-label { font-size: 0.85em; opacity: 0.9; }
         .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; }
         .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; }
+
+        /* --- 新增：讓進度格線可以水平滑動的容器 --- */
+        .habit-grid-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 5px; /* 預留空間給滾動條 */
+        }
+
+        /* --- 新增：Media Query for Mobile Devices --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            h1 { font-size: 1.8em; }
+
+            .tab-button {
+                padding: 12px 10px;
+                font-size: 14px;
+            }
+
+            .user-selector-grid { gap: 10px; }
+            .user-button { padding: 8px 15px; font-size: 14px; }
+            
+            .month-nav { gap: 10px; }
+            .month-nav h2 { font-size: 1.2em; }
+            .month-nav button { padding: 8px 12px; font-size: 14px; }
+            
+            .calendar-grid {
+                padding: 10px;
+                gap: 2px;
+            }
+            .day-cell { min-height: auto; } /* 讓高度自動適應 */
+            .day-header { padding: 10px 5px; font-size: 12px; }
+
+            .stats { grid-template-columns: 1fr 1fr; gap: 15px; } /* 改為兩欄式 */
+            .stat-card { padding: 15px; }
+            .stat-number { font-size: 1.8em; }
+
+            /* --- 修改：團隊總覽的排版 --- */
+            .user-row {
+                flex-direction: column; /* 改為垂直排列 */
+                align-items: flex-start; /* 從中間對齊改為靠左對齊 */
+                gap: 15px; /* 在垂直項目間增加間距 */
+                padding: 15px;
+            }
+            
+            .user-info {
+                flex-wrap: wrap; /* 讓姓名和連續天數可以換行 */
+            }
+            .user-name, .streak-info {
+                min-width: auto; /* 移除最小寬度限制 */
+            }
+        }
     </style>
 </head>
 <body>
@@ -446,6 +498,11 @@
                     
                     habitGrid.appendChild(cell);
                 }
+
+                /* --- 修改：新增一個 wrapper 讓 habit-grid 可以水平滾動 --- */
+                const habitGridWrapper = document.createElement('div');
+                habitGridWrapper.className = 'habit-grid-wrapper';
+                habitGridWrapper.appendChild(habitGrid);
                 
                 userRow.innerHTML = `
                     <div class="user-info">
@@ -453,7 +510,7 @@
                         <div class="streak-info">連續 ${user.streak} 天</div>
                     </div>
                 `;
-                userRow.appendChild(habitGrid);
+                userRow.appendChild(habitGridWrapper); // 將 wrapper 而非 grid 本身加入
                 overview.appendChild(userRow);
             });
         }
