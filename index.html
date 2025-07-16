@@ -121,8 +121,6 @@
                     <div class="stat-label">總完成天數</div>
                 </div>
             </div>
-            
-            <div id="debugInfo" class="debug-info" style="display: none;"></div>
         </div>
 
         <div id="team" class="tab-content">
@@ -145,7 +143,6 @@
         let currentDate = new Date();
         let currentUser = '';
         let currentTab = 'personal';
-        let debugMode = false;
 
         const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
         const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
@@ -155,17 +152,6 @@
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
-        }
-        
-        function debugLog(message) {
-            if (debugMode) {
-                console.log(message);
-                const debugDiv = document.getElementById('debugInfo');
-                if (debugDiv) {
-                    debugDiv.style.display = 'block';
-                    debugDiv.innerHTML += message + '<br>';
-                }
-            }
         }
         
         function switchTab(event, tabName) {
@@ -475,26 +461,27 @@
                 if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const originalData = await response.json();
 
-                if (originalData.error) throw new Error(`Script error: ${originalData.error}`);
+                // --- 修改：直擊原始資料 ---
+                console.log("----- GOOGLE SHEETS RAW RESPONSE -----");
+                console.log(originalData);
+                console.log("--------------------------------------");
 
-                // --- 新增：資料清理 ---
-                // 這個區塊會修正從 Google Sheets 來的日期格式問題
+                if (originalData.error) throw new Error(`Script error: ${originalData.error}`);
+                
                 const cleanedUserData = {};
                 const rawRecords = originalData.records || {};
                 for (const userId in rawRecords) {
                     cleanedUserData[userId] = {};
                     for (const rawDateStr in rawRecords[userId]) {
-                        // 無論原始日期格式是什麼，都轉換成標準 YYYY-MM-DD
                         const cleanedDateStr = formatDate(new Date(rawDateStr));
                         cleanedUserData[userId][cleanedDateStr] = rawRecords[userId][rawDateStr];
                     }
                 }
                 
-                // 使用清理過的資料
                 userData = cleanedUserData;
                 userNames = originalData.users || {};
                 
-                console.log('Cleaned user data:', userData); // 可以在主控台看到清理後的資料
+                console.log("Cleaned user data:", userData); 
                 
                 renderUserSelector();
                 
@@ -535,24 +522,6 @@
             }
             
             loadDataFromGoogleSheets();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.altKey && e.key === 'd') {
-                e.preventDefault(); 
-                debugMode = !debugMode;
-                const debugInfo = document.getElementById('debugInfo');
-                if (debugInfo) {
-                    debugInfo.style.display = debugMode ? 'block' : 'none';
-                    if (debugMode) {
-                        debugInfo.innerHTML = '偵錯模式已啟用<br>';
-                        renderCurrentTab();
-                    } else {
-                        debugInfo.innerHTML = '';
-                    }
-                }
-                alert('偵錯模式已 ' + (debugMode ? '啟用' : '關閉'));
-            }
         });
     </script>
 </body>
