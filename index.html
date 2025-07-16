@@ -43,7 +43,6 @@
         .streak-info { background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; min-width: 120px; text-align: center; }
         .habit-grid { display: grid; grid-template-columns: repeat(25, 1fr); grid-template-rows: repeat(4, 1fr); gap: 2px; flex-shrink: 0; }
         .habit-cell { width: 12px; height: 12px; border-radius: 2px; background: #e2e8f0; border: 1px solid #cbd5e0; transition: all 0.2s ease; }
-        /* --- 修改：根據建議加入 !important 強化樣式 --- */
         .habit-cell.completed { 
             background: linear-gradient(135deg, #48bb78, #38a169) !important; 
             border-color: #38a169 !important; 
@@ -56,7 +55,7 @@
         .team-stat-card { background: linear-gradient(135deg, #805ad5, #6b46c1); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         .team-stat-number { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
         .team-stat-label { font-size: 0.85em; opacity: 0.9; }
-        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; }
+        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; word-break: break-all; }
         .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; }
 
         .habit-grid-wrapper {
@@ -382,7 +381,6 @@
             return streakCount;
         }
 
-        // --- 修改：根據綜合建議，重構此函數 ---
         function createTeamOverview() {
             const overview = document.getElementById('teamOverview');
             if (!overview) return;
@@ -411,12 +409,11 @@
             document.getElementById('avgStreak').textContent = avgStreak;
             document.getElementById('topStreak').textContent = maxStreak;
             
-            overview.innerHTML = ''; // 清空舊內容
+            overview.innerHTML = ''; 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             userStats.forEach(user => {
-                // 1. 建立所有需要的元素 (避免 innerHTML 覆蓋問題)
                 const userRow = document.createElement('div');
                 userRow.className = 'user-row';
 
@@ -437,7 +434,6 @@
                 const habitGrid = document.createElement('div');
                 habitGrid.className = 'habit-grid';
                 
-                // 2. 填充習慣格線
                 for (let i = 0; i < 100; i++) {
                     const cellDate = new Date(START_DATE);
                     cellDate.setDate(START_DATE.getDate() + i);
@@ -448,12 +444,11 @@
                     cell.className = 'habit-cell';
                     cell.title = `${dateStr} - 第${i + 1}天`;
                     
-                    // 3. 調整判斷順序並加入偵錯日誌
-                    debugLog(`團隊總覽檢查: User: ${user.name}, Date: ${dateStr}, Record: ${user.records[dateStr]}`);
-
-                    if (user.records[dateStr]) {
+                    const record = user.records[dateStr];
+                    
+                    if (record) { 
                         cell.classList.add('completed');
-                    } else if (cellDate > today) {
+                    } else if (cellDate.getTime() > today.getTime()) {
                         cell.classList.add('future');
                     }
                     
@@ -464,7 +459,6 @@
                     habitGrid.appendChild(cell);
                 }
 
-                // 4. 依序將元素組合起來
                 userInfo.appendChild(userName);
                 userInfo.appendChild(streakInfo);
                 habitGridWrapper.appendChild(habitGrid);
@@ -479,12 +473,28 @@
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                const data = await response.json();
+                const originalData = await response.json();
 
-                if (data.error) throw new Error(`Script error: ${data.error}`);
+                if (originalData.error) throw new Error(`Script error: ${originalData.error}`);
 
-                userData = data.records || {};
-                userNames = data.users || {};
+                // --- 新增：資料清理 ---
+                // 這個區塊會修正從 Google Sheets 來的日期格式問題
+                const cleanedUserData = {};
+                const rawRecords = originalData.records || {};
+                for (const userId in rawRecords) {
+                    cleanedUserData[userId] = {};
+                    for (const rawDateStr in rawRecords[userId]) {
+                        // 無論原始日期格式是什麼，都轉換成標準 YYYY-MM-DD
+                        const cleanedDateStr = formatDate(new Date(rawDateStr));
+                        cleanedUserData[userId][cleanedDateStr] = rawRecords[userId][rawDateStr];
+                    }
+                }
+                
+                // 使用清理過的資料
+                userData = cleanedUserData;
+                userNames = originalData.users || {};
+                
+                console.log('Cleaned user data:', userData); // 可以在主控台看到清理後的資料
                 
                 renderUserSelector();
                 
@@ -495,7 +505,7 @@
                     renderCurrentTab();
                 }
                 
-                console.log('資料已從 Google Sheets 載入');
+                console.log('資料已從 Google Sheets 載入並清理');
 
             } catch (error) {
                 console.error('載入 Google Sheets 資料失敗:', error);
@@ -528,17 +538,20 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+            if (e.ctrlKey && e.altKey && e.key === 'd') {
+                e.preventDefault(); 
                 debugMode = !debugMode;
                 const debugInfo = document.getElementById('debugInfo');
                 if (debugInfo) {
                     debugInfo.style.display = debugMode ? 'block' : 'none';
                     if (debugMode) {
                         debugInfo.innerHTML = '偵錯模式已啟用<br>';
+                        renderCurrentTab();
                     } else {
                         debugInfo.innerHTML = '';
                     }
                 }
+                alert('偵錯模式已 ' + (debugMode ? '啟用' : '關閉'));
             }
         });
     </script>
