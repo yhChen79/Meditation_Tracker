@@ -55,7 +55,6 @@
         .team-stat-card { background: linear-gradient(135deg, #805ad5, #6b46c1); color: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         .team-stat-number { font-size: 1.8em; font-weight: bold; margin-bottom: 5px; }
         .team-stat-label { font-size: 0.85em; opacity: 0.9; }
-        .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; word-break: break-all; }
         .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; }
 
         .habit-grid-wrapper {
@@ -136,7 +135,8 @@
 
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaZycGZPb0b-bMaslLXCiENn-vzGnCwFLwDG6BURUJ6gjZKbDZ42swqHhCGu3M0UKV2Q/exec';
-        const START_DATE = new Date('2024-06-27');
+        // --- 最終修正：將起始日期改為 2025 年以匹配您的資料 ---
+        const START_DATE = new Date('2025-06-27');
         
         let userData = {};
         let userNames = {};
@@ -461,11 +461,6 @@
                 if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
                 const originalData = await response.json();
 
-                // --- 修改：直擊原始資料 ---
-                console.log("----- GOOGLE SHEETS RAW RESPONSE -----");
-                console.log(originalData);
-                console.log("--------------------------------------");
-
                 if (originalData.error) throw new Error(`Script error: ${originalData.error}`);
                 
                 const cleanedUserData = {};
@@ -480,8 +475,6 @@
                 
                 userData = cleanedUserData;
                 userNames = originalData.users || {};
-                
-                console.log("Cleaned user data:", userData); 
                 
                 renderUserSelector();
                 
@@ -504,6 +497,8 @@
         }
         
         document.addEventListener('DOMContentLoaded', () => {
+            loadDataFromGoogleSheets();
+            
             const prevButton = document.getElementById('prevMonth');
             const nextButton = document.getElementById('nextMonth');
             
@@ -520,8 +515,6 @@
                     createCalendar();
                 });
             }
-            
-            loadDataFromGoogleSheets();
         });
     </script>
 </body>
