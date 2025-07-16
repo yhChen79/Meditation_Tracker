@@ -43,7 +43,11 @@
         .streak-info { background: linear-gradient(135deg, #48bb78, #38a169); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; min-width: 120px; text-align: center; }
         .habit-grid { display: grid; grid-template-columns: repeat(25, 1fr); grid-template-rows: repeat(4, 1fr); gap: 2px; flex-shrink: 0; }
         .habit-cell { width: 12px; height: 12px; border-radius: 2px; background: #e2e8f0; border: 1px solid #cbd5e0; transition: all 0.2s ease; }
-        .habit-cell.completed { background: linear-gradient(135deg, #48bb78, #38a169); border-color: #38a169; }
+        /* --- 修改：根據建議加入 !important 強化樣式 --- */
+        .habit-cell.completed { 
+            background: linear-gradient(135deg, #48bb78, #38a169) !important; 
+            border-color: #38a169 !important; 
+        }
         .habit-cell.today { border-color: #667eea; border-width: 2px; }
         .habit-cell:hover { transform: scale(1.2); }
         .habit-cell.future { background: #f7fafc; border-color: #e2e8f0; opacity: 0.6; }
@@ -315,8 +319,6 @@
             if (!currentUser) return;
             const userRecords = userData[currentUser] || {};
             
-            debugLog(`更新統計資料 - 使用者: ${currentUser}`);
-            
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
             let monthlyCount = 0;
@@ -331,8 +333,6 @@
             
             const totalDays = Object.keys(userRecords).filter(date => userRecords[date]).length;
             const streakCount = calculateStreak(userRecords);
-            
-            debugLog(`本月完成天數: ${monthlyCount}, 連續天數: ${streakCount}, 總天數: ${totalDays}`);
             
             updateStatsDisplay(monthlyCount, streakCount, totalDays);
         }
@@ -361,7 +361,6 @@
             yesterday.setHours(0, 0, 0, 0);
 
             if (latestCompletionDate.getTime() < yesterday.getTime()) {
-                debugLog(`連續紀錄已中斷。最後完成日: ${formatDate(latestCompletionDate)}, 早於昨天。`);
                 return 0;
             }
 
@@ -380,11 +379,10 @@
                 if (streakCount > 365) break;
             }
             
-            debugLog(`計算出活躍的連續天數: ${streakCount} 天, 結束於 ${formatDate(latestCompletionDate)}.`);
             return streakCount;
         }
 
-        // --- 修改：重構 createTeamOverview 函數以提高穩定性 ---
+        // --- 修改：根據綜合建議，重構此函數 ---
         function createTeamOverview() {
             const overview = document.getElementById('teamOverview');
             if (!overview) return;
@@ -408,24 +406,17 @@
             
             const avgStreak = userStats.length > 0 ? (totalStreak / userStats.length).toFixed(1) : 0;
             
-            const teamStatsElements = {
-                totalTeamDays: document.getElementById('totalTeamDays'),
-                activeUsers: document.getElementById('activeUsers'),
-                avgStreak: document.getElementById('avgStreak'),
-                topStreak: document.getElementById('topStreak')
-            };
-            
-            if (teamStatsElements.totalTeamDays) teamStatsElements.totalTeamDays.textContent = totalDays;
-            if (teamStatsElements.activeUsers) teamStatsElements.activeUsers.textContent = activeUsers;
-            if (teamStatsElements.avgStreak) teamStatsElements.avgStreak.textContent = avgStreak;
-            if (teamStatsElements.topStreak) teamStatsElements.topStreak.textContent = maxStreak;
+            document.getElementById('totalTeamDays').textContent = totalDays;
+            document.getElementById('activeUsers').textContent = activeUsers;
+            document.getElementById('avgStreak').textContent = avgStreak;
+            document.getElementById('topStreak').textContent = maxStreak;
             
             overview.innerHTML = ''; // 清空舊內容
             const today = new Date();
-            const todayStr = formatDate(today);
+            today.setHours(0, 0, 0, 0);
             
             userStats.forEach(user => {
-                // 建立所有需要的元素
+                // 1. 建立所有需要的元素 (避免 innerHTML 覆蓋問題)
                 const userRow = document.createElement('div');
                 userRow.className = 'user-row';
 
@@ -446,35 +437,37 @@
                 const habitGrid = document.createElement('div');
                 habitGrid.className = 'habit-grid';
                 
-                // 填充習慣格線
+                // 2. 填充習慣格線
                 for (let i = 0; i < 100; i++) {
                     const cellDate = new Date(START_DATE);
                     cellDate.setDate(START_DATE.getDate() + i);
+                    cellDate.setHours(0, 0, 0, 0);
                     const dateStr = formatDate(cellDate);
                     
                     const cell = document.createElement('div');
                     cell.className = 'habit-cell';
                     cell.title = `${dateStr} - 第${i + 1}天`;
                     
-                    if (cellDate > today) {
-                        cell.classList.add('future');
-                    } else if (user.records[dateStr]) { // 關鍵的檢查點
+                    // 3. 調整判斷順序並加入偵錯日誌
+                    debugLog(`團隊總覽檢查: User: ${user.name}, Date: ${dateStr}, Record: ${user.records[dateStr]}`);
+
+                    if (user.records[dateStr]) {
                         cell.classList.add('completed');
+                    } else if (cellDate > today) {
+                        cell.classList.add('future');
                     }
                     
-                    if (dateStr === todayStr) {
+                    if (dateStr === formatDate(today)) {
                         cell.classList.add('today');
                     }
                     
                     habitGrid.appendChild(cell);
                 }
 
-                // 依序將元素組合起來
+                // 4. 依序將元素組合起來
                 userInfo.appendChild(userName);
                 userInfo.appendChild(streakInfo);
-                
                 habitGridWrapper.appendChild(habitGrid);
-                
                 userRow.appendChild(userInfo);
                 userRow.appendChild(habitGridWrapper);
                 
@@ -542,6 +535,8 @@
                     debugInfo.style.display = debugMode ? 'block' : 'none';
                     if (debugMode) {
                         debugInfo.innerHTML = '偵錯模式已啟用<br>';
+                    } else {
+                        debugInfo.innerHTML = '';
                     }
                 }
             }
