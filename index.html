@@ -337,16 +337,15 @@
             updateStatsDisplay(monthlyCount, streakCount, totalDays);
         }
 
-        // --- 修改：重寫 `calculateStreak` 函數以修復邏輯錯誤 ---
         function calculateStreak(userRecords) {
             if (!userRecords || Object.keys(userRecords).length === 0) {
                 return 0;
             }
 
             const completedDates = Object.keys(userRecords)
-                .filter(date => userRecords[date]) // 只取出已完成的日期
-                .map(dateStr => new Date(dateStr)) // 轉換成 Date 物件
-                .sort((a, b) => b - a); // 降序排序，最新的日期在最前面
+                .filter(date => userRecords[date])
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => b - a);
 
             if (completedDates.length === 0) {
                 return 0;
@@ -354,7 +353,6 @@
 
             const latestCompletionDate = completedDates[0];
             
-            // 將今天和昨天標準化到午夜，以便比較
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
@@ -362,13 +360,11 @@
             yesterday.setDate(yesterday.getDate() - 1);
             yesterday.setHours(0, 0, 0, 0);
 
-            // 如果最後一次完成是在昨天之前，表示連續紀錄已中斷
             if (latestCompletionDate.getTime() < yesterday.getTime()) {
                 debugLog(`連續紀錄已中斷。最後完成日: ${formatDate(latestCompletionDate)}, 早於昨天。`);
                 return 0;
             }
 
-            // 如果連續紀錄是活躍的（最後完成日是今天或昨天），則從最後完成日開始往前計算
             let streakCount = 0;
             let checkDate = new Date(latestCompletionDate);
             checkDate.setHours(0, 0, 0, 0);
@@ -379,9 +375,9 @@
                     streakCount++;
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
-                    break; // 遇到中斷點
+                    break;
                 }
-                if (streakCount > 365) break; // 安全機制，防止無限循環
+                if (streakCount > 365) break;
             }
             
             debugLog(`計算出活躍的連續天數: ${streakCount} 天, 結束於 ${formatDate(latestCompletionDate)}.`);
@@ -396,6 +392,7 @@
             
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
+                // --- 修改 #1：使用 truthy 檢查來計算總完成天數 ---
                 const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 const streak = calculateStreak(userRecords);
                 
@@ -444,6 +441,7 @@
                     
                     if (cellDate > today) {
                         cell.classList.add('future');
+                    // --- 修改 #2：使用 truthy 檢查來為格子填色 ---
                     } else if (user.records[dateStr]) {
                         cell.classList.add('completed');
                     }
