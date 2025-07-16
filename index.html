@@ -384,6 +384,7 @@
             return streakCount;
         }
 
+        // --- 修改：重構 createTeamOverview 函數以提高穩定性 ---
         function createTeamOverview() {
             const overview = document.getElementById('teamOverview');
             if (!overview) return;
@@ -392,7 +393,6 @@
             
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
-                // --- 修改 #1：使用 truthy 檢查來計算總完成天數 ---
                 const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 const streak = calculateStreak(userRecords);
                 
@@ -420,16 +420,33 @@
             if (teamStatsElements.avgStreak) teamStatsElements.avgStreak.textContent = avgStreak;
             if (teamStatsElements.topStreak) teamStatsElements.topStreak.textContent = maxStreak;
             
-            overview.innerHTML = '';
+            overview.innerHTML = ''; // 清空舊內容
             const today = new Date();
             const todayStr = formatDate(today);
             
             userStats.forEach(user => {
+                // 建立所有需要的元素
                 const userRow = document.createElement('div');
                 userRow.className = 'user-row';
+
+                const userInfo = document.createElement('div');
+                userInfo.className = 'user-info';
+                
+                const userName = document.createElement('div');
+                userName.className = 'user-name';
+                userName.textContent = user.name;
+                
+                const streakInfo = document.createElement('div');
+                streakInfo.className = 'streak-info';
+                streakInfo.textContent = `連續 ${user.streak} 天`;
+
+                const habitGridWrapper = document.createElement('div');
+                habitGridWrapper.className = 'habit-grid-wrapper';
+
                 const habitGrid = document.createElement('div');
                 habitGrid.className = 'habit-grid';
                 
+                // 填充習慣格線
                 for (let i = 0; i < 100; i++) {
                     const cellDate = new Date(START_DATE);
                     cellDate.setDate(START_DATE.getDate() + i);
@@ -441,8 +458,7 @@
                     
                     if (cellDate > today) {
                         cell.classList.add('future');
-                    // --- 修改 #2：使用 truthy 檢查來為格子填色 ---
-                    } else if (user.records[dateStr]) {
+                    } else if (user.records[dateStr]) { // 關鍵的檢查點
                         cell.classList.add('completed');
                     }
                     
@@ -453,17 +469,15 @@
                     habitGrid.appendChild(cell);
                 }
 
-                const habitGridWrapper = document.createElement('div');
-                habitGridWrapper.className = 'habit-grid-wrapper';
+                // 依序將元素組合起來
+                userInfo.appendChild(userName);
+                userInfo.appendChild(streakInfo);
+                
                 habitGridWrapper.appendChild(habitGrid);
                 
-                userRow.innerHTML = `
-                    <div class="user-info">
-                        <div class="user-name">${user.name}</div>
-                        <div class="streak-info">連續 ${user.streak} 天</div>
-                    </div>
-                `;
+                userRow.appendChild(userInfo);
                 userRow.appendChild(habitGridWrapper);
+                
                 overview.appendChild(userRow);
             });
         }
