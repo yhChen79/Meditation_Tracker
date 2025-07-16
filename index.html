@@ -110,7 +110,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🧘‍♀️ 連續禪定100天計畫 🧘‍♂️</h1>
+        <h1>連續禪定100天計畫</h1>
         
         <div class="tab-container">
             <button class="tab-button active" onclick="switchTab(event, 'personal')">個人追蹤</button>
@@ -129,14 +129,15 @@
             </div>
             <div class="calendar-grid" id="calendarGrid"><div class="loading">請先選擇使用者</div></div>
             
+            <!-- --- 修改：調整統計卡片順序 --- -->
             <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="monthlyCount">-</div>
-                    <div class="stat-label">本月完成天數</div>
-                </div>
                 <div class="stat-card">
                     <div class="stat-number" id="streakCount">-</div>
                     <div class="stat-label">連續天數</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="monthlyCount">-</div>
+                    <div class="stat-label">本月完成天數</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="totalDays">-</div>
@@ -370,19 +371,17 @@
                 return 0;
             }
             
-            // 找到最新的連續記錄
             let checkDate = new Date();
             checkDate.setHours(0, 0, 0, 0);
             debugLog(`開始計算連續天數，從 ${formatDate(checkDate)} 開始`);
             
-            // 先找到最近的一個有記錄的日期作為起點
             let foundRecentRecord = false;
             let recentCheckDate = new Date(checkDate);
             
-            // 往前找最多7天，尋找最近的記錄
             for (let i = 0; i < 7; i++) {
                 const dateStr = formatDate(recentCheckDate);
-                if (userRecords[dateStr] === true) {
+                // --- 修改：使用 truthy 檢查，更具彈性 ---
+                if (userRecords[dateStr]) {
                     checkDate = new Date(recentCheckDate);
                     foundRecentRecord = true;
                     debugLog(`找到最近的記錄日期: ${dateStr}`);
@@ -396,13 +395,13 @@
                 return 0;
             }
             
-            // 從找到的最近記錄日期開始，往前計算連續天數
             let streakCount = 0;
             while (true) {
                 const dateStr = formatDate(checkDate);
-                const isCompleted = userRecords[dateStr] === true;
+                // --- 修改：使用 truthy 檢查，更具彈性 ---
+                const isCompleted = userRecords[dateStr];
                 
-                debugLog(`檢查日期: ${dateStr}, 是否完成: ${isCompleted}, 原始值: ${userRecords[dateStr]}`);
+                debugLog(`檢查日期: ${dateStr}, 是否完成: ${!!isCompleted}, 原始值: ${userRecords[dateStr]}`);
                 
                 if (isCompleted) {
                     streakCount++;
@@ -413,7 +412,6 @@
                     break;
                 }
                 
-                // 防止無限循環
                 if (streakCount > 365) {
                     debugLog('達到最大檢查天數限制');
                     break;
@@ -434,7 +432,7 @@
             
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
-                const completedDays = Object.keys(userRecords).filter(k => userRecords[k] === true).length;
+                const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 const streak = calculateStreak(userRecords);
                 
                 debugLog(`使用者 ${userId} (${userNames[userId]}) - 完成天數: ${completedDays}, 連續天數: ${streak}`);
@@ -453,7 +451,6 @@
             
             debugLog(`團隊統計 - 總天數: ${totalDays}, 活躍使用者: ${activeUsers}, 平均連續: ${avgStreak}, 最高連續: ${maxStreak}`);
             
-            // 更新團隊統計
             const teamStatsElements = {
                 totalTeamDays: document.getElementById('totalTeamDays'),
                 activeUsers: document.getElementById('activeUsers'),
@@ -476,7 +473,6 @@
                 const habitGrid = document.createElement('div');
                 habitGrid.className = 'habit-grid';
                 
-                // 創建 25x4 的格子 (總共100個)
                 for (let i = 0; i < 100; i++) {
                     const cellDate = new Date(START_DATE);
                     cellDate.setDate(START_DATE.getDate() + i);
@@ -488,7 +484,8 @@
                     
                     if (cellDate > today) {
                         cell.classList.add('future');
-                    } else if (user.records[dateStr] === true) {
+                    // --- 修改：使用 truthy 檢查，修復格子未上色的問題 ---
+                    } else if (user.records[dateStr]) {
                         cell.classList.add('completed');
                     }
                     
@@ -499,7 +496,6 @@
                     habitGrid.appendChild(cell);
                 }
 
-                /* --- 修改：新增一個 wrapper 讓 habit-grid 可以水平滾動 --- */
                 const habitGridWrapper = document.createElement('div');
                 habitGridWrapper.className = 'habit-grid-wrapper';
                 habitGridWrapper.appendChild(habitGrid);
@@ -510,7 +506,7 @@
                         <div class="streak-info">連續 ${user.streak} 天</div>
                     </div>
                 `;
-                userRow.appendChild(habitGridWrapper); // 將 wrapper 而非 grid 本身加入
+                userRow.appendChild(habitGridWrapper);
                 overview.appendChild(userRow);
             });
         }
@@ -549,9 +545,7 @@
             }
         }
         
-        // 事件監聽器
         document.addEventListener('DOMContentLoaded', () => {
-            // 設定月份導航按鈕
             const prevButton = document.getElementById('prevMonth');
             const nextButton = document.getElementById('nextMonth');
             
@@ -569,11 +563,9 @@
                 });
             }
             
-            // 載入資料
             loadDataFromGoogleSheets();
         });
 
-        // 偵錯快捷鍵
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.shiftKey && e.key === 'D') {
                 debugMode = !debugMode;
