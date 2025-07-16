@@ -55,56 +55,31 @@
         .debug-info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px; color: #666; }
         .error-message { background: #fed7d7; color: #c53030; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; }
 
-        /* --- 新增：讓進度格線可以水平滑動的容器 --- */
         .habit-grid-wrapper {
             width: 100%;
             overflow-x: auto;
-            padding-bottom: 5px; /* 預留空間給滾動條 */
+            padding-bottom: 5px; 
         }
 
-        /* --- 新增：Media Query for Mobile Devices --- */
         @media (max-width: 768px) {
             body { padding: 10px; }
             .container { padding: 15px; }
             h1 { font-size: 1.8em; }
-
-            .tab-button {
-                padding: 12px 10px;
-                font-size: 14px;
-            }
-
+            .tab-button { padding: 12px 10px; font-size: 14px; }
             .user-selector-grid { gap: 10px; }
             .user-button { padding: 8px 15px; font-size: 14px; }
-            
             .month-nav { gap: 10px; }
             .month-nav h2 { font-size: 1.2em; }
             .month-nav button { padding: 8px 12px; font-size: 14px; }
-            
-            .calendar-grid {
-                padding: 10px;
-                gap: 2px;
-            }
-            .day-cell { min-height: auto; } /* 讓高度自動適應 */
+            .calendar-grid { padding: 10px; gap: 2px; }
+            .day-cell { min-height: auto; }
             .day-header { padding: 10px 5px; font-size: 12px; }
-
-            .stats { grid-template-columns: 1fr 1fr; gap: 15px; } /* 改為兩欄式 */
+            .stats { grid-template-columns: 1fr 1fr; gap: 15px; }
             .stat-card { padding: 15px; }
             .stat-number { font-size: 1.8em; }
-
-            /* --- 修改：團隊總覽的排版 --- */
-            .user-row {
-                flex-direction: column; /* 改為垂直排列 */
-                align-items: flex-start; /* 從中間對齊改為靠左對齊 */
-                gap: 15px; /* 在垂直項目間增加間距 */
-                padding: 15px;
-            }
-            
-            .user-info {
-                flex-wrap: wrap; /* 讓姓名和連續天數可以換行 */
-            }
-            .user-name, .streak-info {
-                min-width: auto; /* 移除最小寬度限制 */
-            }
+            .user-row { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
+            .user-info { flex-wrap: wrap; }
+            .user-name, .streak-info { min-width: auto; }
         }
     </style>
 </head>
@@ -129,7 +104,6 @@
             </div>
             <div class="calendar-grid" id="calendarGrid"><div class="loading">請先選擇使用者</div></div>
             
-            <!-- --- 修改：調整統計卡片順序 --- -->
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="streakCount">-</div>
@@ -256,7 +230,6 @@
             
             grid.innerHTML = '';
         
-            // 添加星期標題
             dayNames.forEach(day => {
                 const dayHeader = document.createElement('div');
                 dayHeader.className = 'day-header';
@@ -343,7 +316,6 @@
             const userRecords = userData[currentUser] || {};
             
             debugLog(`更新統計資料 - 使用者: ${currentUser}`);
-            debugLog(`使用者記錄: ${JSON.stringify(userRecords)}`);
             
             const currentMonth = currentDate.getMonth();
             const currentYear = currentDate.getFullYear();
@@ -365,59 +337,54 @@
             updateStatsDisplay(monthlyCount, streakCount, totalDays);
         }
 
+        // --- 修改：重寫 `calculateStreak` 函數以修復邏輯錯誤 ---
         function calculateStreak(userRecords) {
             if (!userRecords || Object.keys(userRecords).length === 0) {
-                debugLog('沒有記錄，連續天數為 0');
                 return 0;
             }
-            
-            let checkDate = new Date();
-            checkDate.setHours(0, 0, 0, 0);
-            debugLog(`開始計算連續天數，從 ${formatDate(checkDate)} 開始`);
-            
-            let foundRecentRecord = false;
-            let recentCheckDate = new Date(checkDate);
-            
-            for (let i = 0; i < 7; i++) {
-                const dateStr = formatDate(recentCheckDate);
-                // --- 修改：使用 truthy 檢查，更具彈性 ---
-                if (userRecords[dateStr]) {
-                    checkDate = new Date(recentCheckDate);
-                    foundRecentRecord = true;
-                    debugLog(`找到最近的記錄日期: ${dateStr}`);
-                    break;
-                }
-                recentCheckDate.setDate(recentCheckDate.getDate() - 1);
-            }
-            
-            if (!foundRecentRecord) {
-                debugLog('在過去7天內沒有找到任何記錄');
+
+            const completedDates = Object.keys(userRecords)
+                .filter(date => userRecords[date]) // 只取出已完成的日期
+                .map(dateStr => new Date(dateStr)) // 轉換成 Date 物件
+                .sort((a, b) => b - a); // 降序排序，最新的日期在最前面
+
+            if (completedDates.length === 0) {
                 return 0;
             }
+
+            const latestCompletionDate = completedDates[0];
             
+            // 將今天和昨天標準化到午夜，以便比較
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+
+            // 如果最後一次完成是在昨天之前，表示連續紀錄已中斷
+            if (latestCompletionDate.getTime() < yesterday.getTime()) {
+                debugLog(`連續紀錄已中斷。最後完成日: ${formatDate(latestCompletionDate)}, 早於昨天。`);
+                return 0;
+            }
+
+            // 如果連續紀錄是活躍的（最後完成日是今天或昨天），則從最後完成日開始往前計算
             let streakCount = 0;
+            let checkDate = new Date(latestCompletionDate);
+            checkDate.setHours(0, 0, 0, 0);
+
             while (true) {
                 const dateStr = formatDate(checkDate);
-                // --- 修改：使用 truthy 檢查，更具彈性 ---
-                const isCompleted = userRecords[dateStr];
-                
-                debugLog(`檢查日期: ${dateStr}, 是否完成: ${!!isCompleted}, 原始值: ${userRecords[dateStr]}`);
-                
-                if (isCompleted) {
+                if (userRecords[dateStr]) {
                     streakCount++;
-                    debugLog(`連續天數增加到: ${streakCount}`);
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
-                    debugLog(`在 ${dateStr} 中斷，最終連續天數: ${streakCount}`);
-                    break;
+                    break; // 遇到中斷點
                 }
-                
-                if (streakCount > 365) {
-                    debugLog('達到最大檢查天數限制');
-                    break;
-                }
+                if (streakCount > 365) break; // 安全機制，防止無限循環
             }
             
+            debugLog(`計算出活躍的連續天數: ${streakCount} 天, 結束於 ${formatDate(latestCompletionDate)}.`);
             return streakCount;
         }
 
@@ -427,15 +394,10 @@
             
             let totalDays = 0, activeUsers = 0, totalStreak = 0, maxStreak = 0;
             
-            debugLog('開始創建團隊總覽');
-            debugLog(`使用者資料: ${JSON.stringify(userData)}`);
-            
             const userStats = Object.keys(userNames).map(userId => {
                 const userRecords = userData[userId] || {};
                 const completedDays = Object.keys(userRecords).filter(k => userRecords[k]).length;
                 const streak = calculateStreak(userRecords);
-                
-                debugLog(`使用者 ${userId} (${userNames[userId]}) - 完成天數: ${completedDays}, 連續天數: ${streak}`);
                 
                 totalDays += completedDays;
                 if (completedDays > 0) activeUsers++;
@@ -448,8 +410,6 @@
             userStats.sort((a, b) => b.streak - a.streak);
             
             const avgStreak = userStats.length > 0 ? (totalStreak / userStats.length).toFixed(1) : 0;
-            
-            debugLog(`團隊統計 - 總天數: ${totalDays}, 活躍使用者: ${activeUsers}, 平均連續: ${avgStreak}, 最高連續: ${maxStreak}`);
             
             const teamStatsElements = {
                 totalTeamDays: document.getElementById('totalTeamDays'),
@@ -484,7 +444,6 @@
                     
                     if (cellDate > today) {
                         cell.classList.add('future');
-                    // --- 修改：使用 truthy 檢查，修復格子未上色的問題 ---
                     } else if (user.records[dateStr]) {
                         cell.classList.add('completed');
                     }
@@ -521,9 +480,6 @@
 
                 userData = data.records || {};
                 userNames = data.users || {};
-                
-                debugLog(`載入的使用者資料: ${JSON.stringify(userData)}`);
-                debugLog(`載入的使用者名稱: ${JSON.stringify(userNames)}`);
                 
                 renderUserSelector();
                 
