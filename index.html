@@ -109,11 +109,14 @@
             <div class="stats">
                 <div class="stat-card">
                     <div class="stat-number" id="streakCount">-</div>
-                    <div class="stat-label">連續天數</div>
+                    <!-- [MODIFIED] Card 1 Label -->
+                    <div class="stat-label">目前連續禪定天數</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="monthlyCount">-</div>
-                    <div class="stat-label">本月完成天數</div>
+                    <!-- [MODIFIED] Card 2 ID -->
+                    <div class="stat-number" id="longestStreakCount">-</div>
+                    <!-- [MODIFIED] Card 2 Label -->
+                    <div class="stat-label">過去最長連續天數</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="totalDays">-</div>
@@ -135,7 +138,6 @@
 
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzaZycGZPb0b-bMaslLXCiENn-vzGnCwFLwDG6BURUJ6gjZKbDZ42swqHhCGu3M0UKV2Q/exec';
-        // --- 最終修正：將起始日期改為 2025 年以匹配您的資料 ---
         const START_DATE = new Date('2025-06-27');
         
         let userData = {};
@@ -208,6 +210,7 @@
             
             if (!currentUser) {
                 grid.innerHTML = '<div class="loading">請先選擇一位使用者</div>';
+                // [MODIFIED] Update placeholder call
                 updateStatsDisplay('-', '-', '-');
                 return;
             }
@@ -290,36 +293,27 @@
             }
         }
         
-        function updateStatsDisplay(monthly, streak, total) {
-            const monthlyEl = document.getElementById('monthlyCount');
+        // [MODIFIED] Function updated to handle new stats
+        function updateStatsDisplay(streak, longestStreak, total) {
+            const longestStreakEl = document.getElementById('longestStreakCount');
             const streakEl = document.getElementById('streakCount');
             const totalEl = document.getElementById('totalDays');
             
-            if (monthlyEl) monthlyEl.textContent = monthly;
             if (streakEl) streakEl.textContent = streak;
+            if (longestStreakEl) longestStreakEl.textContent = longestStreak;
             if (totalEl) totalEl.textContent = total;
         }
         
+        // [MODIFIED] Function updated to calculate new stats
         function updateStats() {
             if (!currentUser) return;
             const userRecords = userData[currentUser] || {};
             
-            const currentMonth = currentDate.getMonth();
-            const currentYear = currentDate.getFullYear();
-            let monthlyCount = 0;
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = formatDate(new Date(currentYear, currentMonth, day));
-                if (userRecords[dateStr]) {
-                    monthlyCount++;
-                }
-            }
-            
             const totalDays = Object.keys(userRecords).filter(date => userRecords[date]).length;
             const streakCount = calculateStreak(userRecords);
+            const longestStreakCount = calculateLongestStreak(userRecords); // New calculation
             
-            updateStatsDisplay(monthlyCount, streakCount, totalDays);
+            updateStatsDisplay(streakCount, longestStreakCount, totalDays);
         }
 
         function calculateStreak(userRecords) {
@@ -365,6 +359,49 @@
             }
             
             return streakCount;
+        }
+        
+        // [NEW] Function to calculate the longest streak in history
+        function calculateLongestStreak(userRecords) {
+            if (!userRecords || Object.keys(userRecords).length === 0) {
+                return 0;
+            }
+
+            const completedDates = Object.keys(userRecords)
+                .filter(date => userRecords[date])
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => a - b); // Sort ascending by date
+
+            if (completedDates.length === 0) {
+                return 0;
+            }
+
+            let longestStreak = 0;
+            let currentStreak = 0;
+            
+            if (completedDates.length > 0) {
+                longestStreak = 1;
+                currentStreak = 1;
+            }
+
+            for (let i = 1; i < completedDates.length; i++) {
+                const currentDate = completedDates[i];
+                const prevDate = completedDates[i - 1];
+                
+                const diffTime = currentDate.getTime() - prevDate.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 1) {
+                    currentStreak++;
+                } else {
+                    longestStreak = Math.max(longestStreak, currentStreak);
+                    currentStreak = 1;
+                }
+            }
+            
+            longestStreak = Math.max(longestStreak, currentStreak);
+
+            return longestStreak;
         }
 
         function createTeamOverview() {
